@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>TradeBid Workbench — Quote with your margin in sight</title>
+<meta name="description" content="A private prototype for building cost-aware quotes and checking actual project margins. Not a financial or tax service.">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<header class="top">
+ <a class="brand" href="./" aria-label="TradeBid Workbench home"><span class="logo">∟</span><span>TradeBid<small>WORKBENCH</small></span></a>
+ <div class="header-right"><span class="status"> <span class="dot"></span> PRIVATE PROTOTYPE</span><button class="ghost" id="newJob">New job</button><button class="ghost" id="exportAll">Export saved jobs</button><button class="ghost" id="importTrigger">Import JSON</button><input id="importFile" type="file" accept="application/json" hidden></div>
+</header>
+<main class="container">
+ <section class="hero"><div><p class="eyebrow">FOR INDEPENDENT SERVICE BUSINESSES</p><h1>Quote confidently.<br><span>Protect your real profit.</span></h1><p>Stop guessing what a job is worth. Add the cost of doing the work, see your real price floor, create a professional estimate, then compare what you actually earned.</p></div><div class="hero-points"><span>01<br><strong>Count every cost</strong></span><span>02<br><strong>Set a margin floor</strong></span><span>03<br><strong>Track real results</strong></span></div></section>
+ <nav class="tabs" aria-label="Workflow"><button class="tab current" type="button" data-tab="quote">1 · Build quote</button><button class="tab" type="button" data-tab="client">2 · Client preview</button><button class="tab" type="button" data-tab="actual">3 · Job results</button><button class="tab" type="button" data-tab="history">4 · Saved jobs</button></nav>
+ <div id="errors" role="alert" aria-live="assertive" hidden></div>
+ <section id="quoteTab" class="tab-panel visible">
+ <div class="layout">
+ <div class="stack">
+ <section class="card"><div class="card-head"><div><span class="eyebrow">STEP ONE</span><h2>Job &amp; customer</h2><p>These details go on the customer copy.</p></div><span class="icon">01</span></div>
+ <div class="fields">
+ <label>Business name <input id="business" placeholder="Your company" maxlength="90"></label>
+ <label>Customer <input id="customer" placeholder="Customer name" maxlength="90"></label>
+ <label>Job title <input id="job" placeholder="e.g. Kitchen and two bathrooms" maxlength="150"></label>
+ <label>Reference <input id="reference" placeholder="e.g. Q-0042" maxlength="50"></label>
+ <label>Currency <select id="currency"><option value="USD">USD · $</option><option value="ILS">ILS · ₪</option><option value="GBP">GBP · £</option><option value="EUR">EUR · €</option></select></label>
+ <label>Valid until <input id="validUntil" type="date"></label>
+ <label class="wide">What's included? <textarea id="scope" rows="3" placeholder="Be specific: rooms, tasks, quantities, visits, materials..." maxlength="1600"></textarea></label>
+ <label class="wide">What's excluded? <textarea id="excluded" rows="2" placeholder="Protect against added tasks and misunderstandings." maxlength="1000"></textarea></label>
+ <label class="wide">Customer contact / business link <input id="contact" placeholder="phone, email or website" maxlength="200"></label>
+ <label class="wide">Payment / scope terms <textarea id="terms" rows="2" maxlength="900" placeholder="e.g. Confirm final scope before work begins."></textarea></label>
+ </div></section>
+ <section class="card"><div class="card-head"><div><span class="eyebrow">STEP TWO</span><h2>The real job cost</h2><p>Enter your own figures. No invented local rates.</p></div><span class="icon">02</span></div>
+ <div class="fields">
+ <label>Workers <input type="number" id="crew" min="0" step="1" value="1"></label>
+ <label>Hours per worker <input type="number" id="hours" min="0" step="0.25" value="4"></label>
+ <label>Cost per worker-hour <input type="number" id="hourly" min="0" step="0.01" value="25"></label>
+ <label>Payroll burden (%) <input type="number" id="laborBurden" min="0" max="100" value="20" step="0.5"></label>
+ <label>Materials <input type="number" id="materials" min="0" value="30" step=".01"></label>
+ <label>Supplies <input type="number" id="supplies" min="0" value="10" step=".01"></label>
+ <label>Travel / fuel <input type="number" id="travel" min="0" value="20" step=".01"></label>
+ <label>Equipment <input type="number" id="tools" min="0" value="0" step=".01"></label>
+ <label>Subcontractors <input type="number" id="subcontract" min="0" value="0" step=".01"></label>
+ <label>Contingency (%) <input type="number" id="contingency" min="0" max="100" value="5" step="0.5"></label>
+ <label>Overhead allocation (%) <input type="number" id="overhead" min="0" max="100" value="10" step=".5"></label>
+ <label>Target margin (%) <input type="number" id="targetMargin" min="0" max="89" value="30" step=".5"></label>
+ <label>Minimum margin (%) <input type="number" id="minMargin" min="0" max="89" value="15" step=".5"></label>
+ <label>Discount (%) <input type="number" id="discount" min="0" max="100" value="0" step=".5"></label>
+ <label>Sales tax (%) <input type="number" id="taxRate" min="0" max="100" value="0" step=".5"></label>
+ <label>Quote amount <input type="number" id="quote" min="0" step=".01" placeholder="Blank = calculated target"></label>
+ </div><p class="note">Cost per worker-hour means your actual employer/owner cost, not what you charge clients. Overhead and contingency are cost estimates; taxes are modeled as pass-through and shown separately. Verify applicable rules yourself.</p>
+ </section>
+ </div>
+ <div class="stack">
+ <section class="card dashboard"><div class="card-head"><div><span class="eyebrow">LIVE QUOTE ANALYSIS</span><h2>The money behind this job</h2></div><span class="live">LIVE CALCULATION</span></div>
+ <div class="stats"><div class="stat"><small>Fully loaded cost</small><strong id="costNumber">—</strong><span>Includes allocated overhead and buffer</span></div><div class="stat highlight"><small>Recommended quote</small><strong id="suggestedNumber">—</strong><span>Target margin before sales tax</span></div><div class="stat"><small>Expected profit</small><strong id="profitNumber">—</strong><span>After discount, before income taxes</span></div><div class="stat"><small>Gross margin estimate</small><strong id="marginNumber">—</strong><span>Percentage of revenue, not markup</span></div></div>
+ <div class="flag" id="marginFlag" role="status"></div>
+ <div class="bar-block"><div class="bar-text"><span>Profitability at quoted price</span><strong id="marginBarLabel"></strong></div><div class="track"><div id="marginBar" class="fill"></div></div></div>
+ <div class="breakdown"><h3>Where the quote money goes</h3><div id="costBreakdown" class="rows"></div></div>
+ <div class="analysis-grid"><div class="mini-stat"><small>Customer pays (inc. modeled sales tax)</small><strong id="customerTotal">—</strong></div><div class="mini-stat"><small>Minimum quote at your margin floor</small><strong id="minimumPrice">—</strong></div><div class="mini-stat"><small>With 15% extra labor hours</small><strong id="stressMargin">—</strong></div><div class="mini-stat"><small>Markup on cost</small><strong id="markup">—</strong></div></div>
+ <div class="actions"><button id="saveJob" class="primary">Save job locally</button><button id="openPreview" class="secondary">See client quote →</button></div>
+ <p class="note">This is a calculation based solely on your inputs; it's not market pricing advice or a guarantee of work, margin or costs.</p>
+ </section>
+ <section class="card"><div class="card-head"><div><span class="eyebrow">SCOPE PROTECTION</span><h2>Before you send</h2></div></div><ul class="guardrails" id="guardrails"></ul></section>
+ <section class="card"><div class="card-head"><div><span class="eyebrow">CHANGE-ORDER PROTECTION</span><h2>Extra work? Price it first.</h2><p>Create a separate add-on estimate instead of absorbing unpaid work.</p></div></div>
+ <div class="fields">
+ <label>Additional worker-hours <input id="scopeExtraHours" type="number" min="0" value="0" step=".25"></label>
+ <label>Extra materials <input id="scopeExtraMaterials" type="number" min="0" value="0" step=".01"></label>
+ <label>Extra travel <input id="scopeExtraTravel" type="number" min="0" value="0" step=".01"></label>
+ <label>Other equipment <input id="scopeExtraEquipment" type="number" min="0" value="0" step=".01"></label>
+ <label class="wide">Why the scope changed <textarea id="scopeExtraNotes" rows="2" maxlength="600" placeholder="e.g. Customer requested an additional room"></textarea></label>
+ </div><div class="analysis-grid"><div class="mini-stat"><small>Modeled extra cost</small><strong id="extraCost">—</strong></div><div class="mini-stat"><small>Suggested additional price</small><strong id="extraPrice">—</strong></div></div>
+ <p class="note" id="extraWarning">An additional quote is only a draft. Obtain explicit customer approval before any extra work.</p>
+ <div class="actions"><button class="secondary" id="copyChangeOrder">Copy add-on proposal</button></div>
+ </section>
+ </div>
+ </div></section>
+ <section id="clientTab" class="tab-panel"><div class="preview-layout"><section class="card"><div class="card-head"><div><span class="eyebrow">CLIENT-FACING OUTPUT</span><h2>Professional estimate</h2><p>Only scope and customer price are shown. Your labor cost and profit are private.</p></div></div><div id="quotePreview" class="quote-paper"></div><div class="actions"><button class="primary" id="printQuote">Print / save PDF</button><button class="secondary" id="copyEmail">Copy quote email</button></div></section><aside class="card"><h3>Before sending</h3><ol class="checklist"><li>Check the exact area and work included.</li><li>Explain what's excluded and what requires a new price.</li><li>Verify sales tax and contract requirements in your location.</li><li>Confirm the quote validity date.</li><li>Get written acceptance before work starts.</li></ol><p class="note">This file does not send emails, collect deposits, create e-signatures or automatically accept an order.</p></aside></div></section>
+ <section id="actualTab" class="tab-panel"><div class="layout"><section class="card"><div class="card-head"><div><span class="eyebrow">AFTER THE JOB</span><h2>What did the job really cost?</h2><p>Track actual spending and learn from estimates.</p></div></div><div class="fields"><label>Actual workers <input type="number" min="0" id="actualCrew" value="1"></label><label>Hours per worker <input type="number" min="0" id="actualHours" value="4" step=".25"></label><label>Cost per hour <input type="number" min="0" id="actualHourly" value="25" step=".01"></label><label>Materials <input type="number" min="0" id="actualMaterials" value="30" step=".01"></label><label>Supplies <input type="number" min="0" id="actualSupplies" value="10" step=".01"></label><label>Travel <input type="number" min="0" id="actualTravel" value="20" step=".01"></label><label>Equipment <input type="number" min="0" id="actualTools" value="0" step=".01"></label><label>Subcontractors <input type="number" min="0" id="actualSubcontract" value="0" step=".01"></label></div><div class="actions"><button id="copyEstimateToActual" class="secondary">Start from estimate</button><button id="recordActual" class="primary">Record result locally</button></div></section><section class="card dashboard"><span class="eyebrow">ACTUAL VS QUOTED</span><h2>Find the cost that moved</h2><div class="stats"><div class="stat"><small>Actual allocated cost</small><strong id="actualCost">—</strong></div><div class="stat highlight"><small>Actual gross profit</small><strong id="actualProfit">—</strong></div><div class="stat"><small>Variance vs budget</small><strong id="actualVariance">—</strong></div><div class="stat"><small>Actual margin</small><strong id="actualMargin">—</strong></div></div><p class="note">Actual cost includes overhead allocated from real direct costs, but does not add a fictional "contingency" expense. This is not an accounting system.</p></section></div></section>
+ <section id="historyTab" class="tab-panel"><section class="card"><div class="card-head"><div><span class="eyebrow">LOCAL WORKSPACE</span><h2>Saved jobs</h2><p>Saved only in this browser (not encrypted). Back up with Export JSON.</p></div><button id="exportCSV" class="secondary">Export CSV</button></div><div class="table-wrap"><table><thead><tr><th>Reference</th><th>Customer / job</th><th>Status</th><th>Quoted total</th><th>Profit estimate</th><th>Actions</th></tr></thead><tbody id="historyRows"></tbody></table></div><p id="emptyHistory" class="note">No jobs saved yet. Save a valid estimate to begin.</p></section></section>
+</main>
+<footer><span>TradeBid Workbench · Private proof of concept · Not yet for sale</span><span>All estimates must be reviewed by the business owner. No data is sent to a server.</span></footer>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script type="module" src="./app.mjs"></script>
+</body>
+</html>
